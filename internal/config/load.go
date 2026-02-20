@@ -12,8 +12,8 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/ccoveille/go-safecast"
+	"github.com/goccy/go-yaml"
 	"github.com/rs/zerolog/log"
-	"gopkg.in/yaml.v3"
 )
 
 // Load reads a script file, replaces the templated values with the values from
@@ -36,7 +36,7 @@ func Load(filename string, vars ScriptVariables) ([]*Script, bool, error) {
 				// is always nonnegative, but gosec doesn't know
 				// that yet.
 				// TODO: remove this when gosec catches up
-				index, _ := safecast.ToUint(i)
+				index, _ := safecast.Convert[uint](i)
 				indices[i] = index
 			}
 			return indices

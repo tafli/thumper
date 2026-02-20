@@ -3,8 +3,8 @@ package config
 import (
 	"fmt"
 
+	"github.com/goccy/go-yaml"
 	"google.golang.org/protobuf/types/known/structpb"
-	"gopkg.in/yaml.v3"
 )
 
 // Script is the top-level struct that yaml script files will be deserialized into.
@@ -15,6 +15,8 @@ type Script struct {
 }
 
 // ScriptStep is a single step of a thumper script, for example a single call to CheckPermissions.
+// TODO: it would be good to break this down into separate types/interfaces
+// so that it's not just one ur-type - i.e. discriminated union or something
 type ScriptStep struct {
 	Op                   string
 	Resource             string
@@ -24,9 +26,20 @@ type ScriptStep struct {
 	ExpectPermissionship string `yaml:"expectPermissionship"`
 	NumExpected          uint   `yaml:"numExpected"`
 	Updates              []Update
+	Checks               []Check
 	Schema               string
 	Consistency          string
 	Context              *ProtoStruct
+}
+
+// Check is one of a set of Checks handed to CheckBulk
+type Check struct {
+	Resource             string
+	Subject              string
+	Permission           string
+	Context              *ProtoStruct
+	ExpectNoPermission   bool   `yaml:"expectNoPermission"`
+	ExpectPermissionship string `yaml:"expectPermissionship"`
 }
 
 // Update is a mutation to a single relationship in a WriteRelationships call.
@@ -55,15 +68,10 @@ type CaveatContext struct {
 	Context *ProtoStruct
 }
 
-func (p *ProtoStruct) UnmarshalYAML(value *yaml.Node) error {
-	fmt.Println("unmarshaling proto struct")
-	if value.Kind != yaml.MappingNode {
-		return fmt.Errorf("expected mapping node, got %v", value.Kind)
-	}
-
+func (p *ProtoStruct) UnmarshalYAML(b []byte) error {
 	c := make(map[string]interface{})
 
-	if err := value.Decode(c); err != nil {
+	if err := yaml.Unmarshal(b, &c); err != nil {
 		return fmt.Errorf("failed to decode struct: %w", err)
 	}
 
@@ -163,4 +171,4 @@ func convertValue(path string, v interface{}) (*structpb.Value, error) {
 	}
 }
 
-var _ yaml.Unmarshaler = (*ProtoStruct)(nil)
+var _ yaml.BytesUnmarshaler = (*ProtoStruct)(nil)

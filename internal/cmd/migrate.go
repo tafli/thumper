@@ -18,7 +18,7 @@ import (
 
 var MigrateCmd = &cobra.Command{
 	Use:   "migrate migration.yaml [migration2.yaml] [migration3.yaml]",
-	Short: "run thumper migration scripts",
+	Short: "run setup scripts",
 	Example: `
 	Run with a single script against a local SpiceDB:
 		thumper migrate ./scripts/schema.yaml --token "testtesttesttest"
@@ -29,8 +29,9 @@ var MigrateCmd = &cobra.Command{
 	Run with environment variables:
 		THUMPER_TOKEN=testtesttesttest thumper migrate ./scripts/schema.yaml
 	`,
-	Args: cobra.MinimumNArgs(1),
-	RunE: migrateCmdFunc,
+	Args:    cobra.MinimumNArgs(1),
+	RunE:    migrateCmdFunc,
+	PreRunE: DefaultPreRunE("thumper"),
 }
 
 func migrateCmdFunc(cmd *cobra.Command, args []string) error {
